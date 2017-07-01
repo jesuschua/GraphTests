@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.1.4/Chart.min.js"></script>
+    <style media="screen">
+      .loading {
+      position: absolute;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: url(http://img.ffffound.com/static-data/assets/6/f71fbabb835aebca4489ba2e0d5cd6aff3ad528c_m.gif) center center no-repeat;
+      }
+      .container {
+      width: 25px;
+      height: 50px;
+      margin: 15px auto;
+      }
+    </style>
+    <title>GETJSON</title>
+  </head>
+  <body>
+    <div class="console"></div>
+    <div class="loading"></div>
+    <canvas id="myChart"></canvas>
+
+    <script>
+      // ID of the Google Spreadsheet
+      var spreadsheetID = "1Veb2vl5EtgAjxVQ9eU-o-RSrgiOMmxUxAh5mQADQP-0";
+
+      // Make sure it is public or set to Anyone with link can view
+      var url1 = "https://spreadsheets.google.com/feeds/list/" + spreadsheetID + "/od6/public/values?alt=json";
+
+      // make JSON call to Google Data API
+      $.getJSON(url1, function(data) {
+        var arr_yearlabel = []
+        var arr_percentfoodutil = []
+        var arr_foodutil = []
+        var arr_nonfoodutil = []
+        var arr_grosupply = []
+        for (var j = 0; j < data.feed.entry.length; j++){
+          arr_yearlabel.push(data.feed.entry[j].gsx$year.$t)
+          arr_percentfoodutil.push(data.feed.entry[j].gsx$percentfoodutilization.$t)
+          arr_foodutil.push(data.feed.entry[j].gsx$foodutilization.$t)
+          arr_nonfoodutil.push(data.feed.entry[j].gsx$nonfoodutilization.$t)
+          arr_grosupply.push(data.feed.entry[j].gsx$grosssupply.$t)
+        }
+        //console.log(data);
+
+      // set global html variable
+      var html = '';
+
+      // build table headings
+      html += '<table cellpadding=10 cellspacing=0 border=1>';
+      html += '<tr>';
+      html += '<th>Year</th>';
+      html += '<th>Percent Food Utilization</th>';
+      html += '<th>Food Utilization</th>';
+      html += '<th>Non-Food Utilization</th>';
+      html += '<th>Gross Supply</th>';
+      html += '</tr>';
+
+      // loop to build html output for each row
+      var entry = data.feed.entry;
+      /**
+      ** Change to descending order
+      ** for (var i = entry.length - 1; i >= 0; i -= 1) {
+       */
+      for (var i = 0; i < entry.length; i++) {
+        html += '<tr>';
+        html += '<td>' + entry[i]['gsx$year']['$t'] + '</td>';
+        html += '<td>' + entry[i]['gsx$percentfoodutilization']['$t'] + '</td>';
+        html += '<td>' + entry[i]['gsx$foodutilization']['$t'] + '</td>';
+        html += '<td>' + entry[i]['gsx$nonfoodutilization']['$t'] + '</td>';
+        html += '<td>' + entry[i]['gsx$grosssupply']['$t'] + '</td>';
+        html += '</tr>';
+      }
+      html += '</table>';
+      
+
+      // output html
+      //$('.console').html(html);
+
+      var ctx = document.getElementById('myChart').getContext('2d');
+      var myChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+            labels: arr_yearlabel,
+            datasets: [
+              {
+              label: 'Foodutilization',
+              data: arr_foodutil,
+              yAxisID: "y-axis-1",
+              backgroundColor: "rgba(153,255,51,0.6)"
+              },
+              {
+              label: 'Non-Food Utilization',
+              data: arr_nonfoodutil,
+              yAxisID: "y-axis-1",
+              backgroundColor: "rgba(255,153,0,0.6)"
+              },
+              {
+              label: 'Percent Food Utilization',
+              data: arr_percentfoodutil,
+              yAxisID: "y-axis-2",
+              backgroundColor: "rgba(138,43,226,0.6)"
+              }
+            ]
+          },
+      options: {
+          title: {
+            display: true,
+            text: 'Historical Rice Utilization'
+            },
+                  scales: {
+                          yAxes: [{
+                              type: "linear", // only linear but allow scale type registration. This allows extensions to exist solely for log scale for instance
+                              display: true,
+                              position: "left",
+                              id: "y-axis-1",
+                          }, {
+                              type: "linear", // only linear but allow scale type registration. This allows extensions to exist solely for log scale for instance
+                              display: true,
+                              ticks: {
+                                beginAtZero: true
+                              },
+                              position: "right",
+                              id: "y-axis-2",
+                              // grid line settings
+                              gridLines: {
+                                  drawOnChartArea: false, // only want the grid lines for one axis to show up
+                              },
+                          }],
+                        }
+            }
+      });
+
+      });
+
+      // loading animation
+      var loading = $('.loading');
+      loading.hide();
+      $(document)
+      .ajaxStart(function() {
+        loading.show();
+      })
+      .ajaxStop(function() {
+        loading.hide();
+      });
+    </script>
+    <!-- <script>
+      var ctx = document.getElementById('myChart').getContext('2d');
+      var myChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: arr_yearlabel,
+        datasets: [{
+          label: 'Year',
+          data: arr_yearlabel,
+          backgroundColor: yellow
+        }, {
+          label: '% Food Utilization',
+          data: arr_percentfoodutil,
+          backgroundColor: blue
+        }]
+      }
+      });
+    </script> -->
+  </body>
+</html>
